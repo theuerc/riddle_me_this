@@ -1,0 +1,6 @@
+[run]
+source = riddle_me_this
+omit = 
+    tests/*
+    autoapp.py
+

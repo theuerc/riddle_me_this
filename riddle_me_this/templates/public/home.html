@@ -1,0 +1,16 @@
+
+{% extends "layout.html" %}
+{% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron">
+    <div class="container">
+
+      <h1 class="display-3">Welcome to Riddle Me This</h1>
+
+      <p>This is an app that allows the user to interact with YouTube Data in novel ways. </p>
+        <p>Sign in with Google to continue.</p>
+        <p><a href="{{ google_login_url }}" class="btn btn-primary btn-large">Log in with Google</a></p>
+    </div>
+</div>
+{% endblock %}
+
