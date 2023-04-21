@@ -13,7 +13,7 @@ Everything is cached in a local sqlite database whose ERD diagram is shown below
 
 **Quickstart for Teaching Team:**
 
-This project requires [Docker](https://www.docker.com/). Everything else should be installed automatically.
+This project requires [Docker Desktop](https://www.docker.com/). Everything else should be installed automatically.
 
 1. Clone the repo
 ```bash
@@ -59,24 +59,22 @@ CLIENT_SECRET=[Your Client Secret]
 3. Once the dev.db file is created, and all of the required information is entered in the .env file, run the following commands in the root directory of the repo:
 ```bash
 docker-compose build flask-dev
-docker-compose run --rm manage db init
-docker-compose run --rm manage db migrate
-docker-compose run --rm manage db upgrade
 docker-compose up flask-dev
 ```
-Then go to http://localhost:8080/
-
-At this point a sqlite database should be created. You can check this by running the following command in the root directory, or you can just move to the next step:
-```bash
-sqlite3 dev.db
-sqlite> .tables
-alembic_version  transcripts      videos         
-roles            users   
-sqlite> .exit
+4. Now open the Docker Desktop app and navigate to the terminal window of the currently running container. Run the following commands:
 ```
-    
+pipenv shell
+flask db init
+flask db upgrade
+exit
+```
+This is what the terminal in the Docker Desktop should look like if everything worked right:
 
-4. Click the button to login with Google, and follow the steps to login. You should then be redirected to the home_logged_in page where you can enter a url.
+<img width="1430" alt="Screen Shot 2023-04-21 at 4 34 38 PM" src="https://user-images.githubusercontent.com/60138157/233729810-f65ff96f-c613-4bd9-b26b-51db27750f81.png">
+
+Go to http://localhost:8080/ with the container still running. 
+
+5. Click the button to login with Google, and follow the steps to login. You should then be redirected to the home_logged_in page where you can enter a url.
 
 ![Screen Shot 2023-04-20 at 11.52.11 PM.png](assets%2Fimg%2FScreen%20Shot%202023-04-20%20at%2011.52.11%20PM.png)
 
