@@ -24,7 +24,7 @@ def upgrade():
     sa.Column('text', sa.Text(), nullable=True),
     sa.Column('language_code', sa.String(length=10), nullable=False),
     sa.Column('is_generated', sa.Boolean(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
     )
     op.create_table('videos',
     sa.Column('id', sa.Integer(), nullable=False),
