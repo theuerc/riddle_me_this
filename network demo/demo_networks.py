@@ -5,6 +5,7 @@ import json
 import logging
 
 import networkx as nx
+from networkx.readwrite import json_graph
 import numpy as np
 import spacy
 import stanza
@@ -145,6 +146,7 @@ class CoOccurrenceVisualizer:
         G = self.build_cooccurrence_graph(doc, named_entities)  # noqa
         important_entities = self.extract_important_entities(G)
         self.visualize_and_save(G, important_entities, file_name)
+        return G
 
 
 def download_en_core_web_(model="en_core_web_sm"):
@@ -332,6 +334,7 @@ class EntityClusterVisualizer:
         labels = self.apply_kmeans_clustering(embeddings, n_clusters)
         G = self.create_clustered_graph(named_entities, labels, n_clusters)  # noqa
         self.visualize_and_save(G, file_name)
+        return G
 
 
 def main():
@@ -345,10 +348,18 @@ def main():
     text = transcript["text"]
 
     co_occurrence_visualizer = CoOccurrenceVisualizer()
-    co_occurrence_visualizer.run(text, "./co_occurrence_graph.html")
+    a = co_occurrence_visualizer.run(text, "./co_occurrence_graph.html")
+    a = json_graph.node_link_data(a)
+    # write a to a json
+    with open("co_occurrence.json", "w", encoding="utf-8") as f:
+        json.dump(a, f)
 
     entity_cluster_visualizer = EntityClusterVisualizer()
-    entity_cluster_visualizer.run(text, 10, "./entity_cluster_graph.html")
+    b = entity_cluster_visualizer.run(text, 10, "./entity_cluster_graph.html")
+    b = json_graph.node_link_data(b)
+    # write b to a json
+    with open("entity_cluster.json", "w", encoding="utf-8") as f:
+        json.dump(b, f)
 
 
 if __name__ == "__main__":
