@@ -9,7 +9,7 @@ There are helper visualization to aid with prompting, like a network of co-occur
 Beyond the network visualization, the title, description, and other metadata are provided. The fetched transcript with and without hyperlink timestamps is provided as well, with the option to regex search for specific rows in the timestamped transcript to verify the accuracy of a specific line of text.
 
 Everything is cached in a local sqlite database whose ERD diagram is shown below:
-![Screen Shot 2023-04-20 at 10.51.01 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_pRZRmp%2FScreen%20Shot%202023-04-20%20at%2010.51.01%20PM.png)
+![Screen Shot 2023-04-20 at 11.56.30 PM.png](assets%2Fimg%2FScreen%20Shot%202023-04-20%20at%2011.56.30%20PM.png)
 
 **Quickstart for Teaching Team:**
 
@@ -78,27 +78,27 @@ sqlite> .exit
 
 4. Click the button to login with Google, and follow the steps to login. You should then be redirected to the home_logged_in page where you can enter a url.
 
-![Screen Shot 2023-04-20 at 11.35.37 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_HYWd9x%2FScreen%20Shot%202023-04-20%20at%2011.35.37%20PM.png)
+![Screen Shot 2023-04-20 at 11.52.11 PM.png](assets%2Fimg%2FScreen%20Shot%202023-04-20%20at%2011.52.11%20PM.png)
 
 5. Enter a youtube url, and click the button to get the transcript. You should then be redirected to the video_details page where you can prompt with ChatGPT or Regex search the timestamped transcript.
 
-![Screen Shot 2023-04-20 at 11.36.21 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_i5Ixre%2FScreen%20Shot%202023-04-20%20at%2011.36.21%20PM.png)
+![Screen Shot 2023-04-20 at 11.52.54 PM.png](assets%2Fimg%2FScreen%20Shot%202023-04-20%20at%2011.52.54%20PM.png)
 
 Sample ChatGPT response:
 
-![Screen Shot 2023-04-20 at 11.37.21 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_0Tnxcn%2FScreen%20Shot%202023-04-20%20at%2011.37.21%20PM.png)
+![Screen Shot 2023-04-20 at 11.53.12 PM.png](assets%2Fimg%2FScreen%20Shot%202023-04-20%20at%2011.53.12%20PM.png)
 
 Sample ChatGPT response to poor line of questioning:
 
-![Screen Shot 2023-04-20 at 11.39.06 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_kp291x%2FScreen%20Shot%202023-04-20%20at%2011.39.06%20PM.png)
+![Screen Shot 2023-04-20 at 11.53.29 PM.png](assets%2Fimg%2FScreen%20Shot%202023-04-20%20at%2011.53.29%20PM.png)
 
 Sample Entity Co-Occurrence network visualization:
 
-![Screen Shot 2023-04-20 at 11.40.36 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_qKGYvy%2FScreen%20Shot%202023-04-20%20at%2011.40.36%20PM.png)
+![Screen Shot 2023-04-20 at 11.53.54 PM.png](assets%2Fimg%2FScreen%20Shot%202023-04-20%20at%2011.53.54%20PM.png)
 
 Sample Regex search:
 
-![Screen Shot 2023-04-20 at 11.41.54 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_0I6fLC%2FScreen%20Shot%202023-04-20%20at%2011.41.54%20PM.png)
+![Screen Shot 2023-04-20 at 11.54.08 PM.png](assets%2Fimg%2FScreen%20Shot%202023-04-20%20at%2011.54.08%20PM.png)
 
 
 This flask app was made with the [flask cookiecutter template](https://github.com/cookiecutter-flask/cookiecutter-flask).
