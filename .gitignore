@@ -64,3 +64,6 @@ client*.json
 *.txt
 
 *.log
+
+# generated html files
+/riddle_me_this/templates/users/video_networks/*.html

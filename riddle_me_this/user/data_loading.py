@@ -7,6 +7,9 @@ import pandas as pd
 import torch
 
 from riddle_me_this.user.models import Video, Transcript
+# from riddle_me_this.user.visualizations import download_en_core_web_
+from riddle_me_this.user.visualizations import *
+from langchain.llms import OpenAI
 
 
 def split_text(text, chunks_size=2000):
@@ -51,6 +54,37 @@ def add_punctuation(text):
     model, example_texts, languages, punct, apply_te = torch.hub.load(repo_or_dir='snakers4/silero-models',
                                                                       model='silero_te', trust_repo=True)
     return apply_te(text, lan='en').replace('[UNK]', '').replace('NK]', '')
+
+
+def get_cosine_similarity(phrase, chunks):
+    # Load the medium-sized English model with word embeddings
+    nlp = download_en_core_web_(model="en_core_web_md")
+
+    # Create a spaCy document for the phrase
+    phrase_doc = nlp(phrase)
+
+    # Calculate the cosine similarity between the phrase and each chunk
+    similarities = []
+    for chunk in chunks:
+        chunk_doc = nlp(chunk)
+        similarity = phrase_doc.similarity(chunk_doc)
+        similarities.append(similarity)
+
+    return similarities
+
+
+def get_response(text, phrase):
+    text_chunks = split_text(text)
+    cosine_similarities = get_cosine_similarity(phrase, text_chunks)
+
+    highest_similarity_index = sorted(range(len(cosine_similarities)), key=lambda i: cosine_similarities[i], reverse=True)[0]
+
+    llm = OpenAI(temperature=0.9)
+    context = text_chunks[highest_similarity_index]
+    prompt = f"Context: {context}. Answer the following question with this context. If the question cannot be answered with the context given, please say this. Politely refuse to answer a question if the context doesn't answer this at least partially. Question: {phrase}?"
+    response = llm(prompt)
+
+    return response
 
 
 def load_transcripts(video_id, transcripts):
@@ -125,3 +159,22 @@ def load_video_info(data):
         statistics_favorite_count=data['items'][0]['statistics']['favoriteCount'],
         statistics_comment_count=data['items'][0]['statistics']['commentCount']
     )
+
+
+def main():
+    with open("../../transcript.txt", "r") as f:
+        text = f.read()
+
+    co_occurrence_visualizer = CoOccurrenceVisualizer()
+    co_occurrence_visualizer.run(text, "co_occurrence_graph.html")
+
+    entity_cluster_visualizer = EntityClusterVisualizer()
+    entity_cluster_visualizer.run(text, 10, "entity_cluster_graph.html")
+
+    phrase = "How was GraphQL used at Twitch?"
+    response = get_response(text, phrase)
+    print(response)
+
+
+if __name__ == '__main__':
+    main()

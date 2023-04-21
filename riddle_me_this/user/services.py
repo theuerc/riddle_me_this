@@ -128,7 +128,7 @@ def get_video_info(video_id):
         return get_video_info(video_id)
 
 
-def get_and_load_transcripts(video_id, language_code='en', local=True):
+def get_and_load_transcripts(video_id, language_code='en', local=True, text=True):
     """
     Searches the database for a transcript with the given video_id and language_code.
 
@@ -136,9 +136,10 @@ def get_and_load_transcripts(video_id, language_code='en', local=True):
         video_id (str): The ID of the YouTube video.
         language_code (str): The language code of the desired transcript.
         local (bool): Whether to use the local transcribe_whisper function or the remote one.
+        text (bool): Whether to return the transcript text or the transcript object.
 
     Returns:
-        transcript (Transcript or None): The transcript object if found in the database, otherwise None.
+        transcript (Transcript or None): The transcript object if found in the database
     Raises:
     -------
     Exception : If there are no available transcripts for the given video.
@@ -149,7 +150,7 @@ def get_and_load_transcripts(video_id, language_code='en', local=True):
                                             is_generated=False).first() or \
                  Transcript.query.filter_by(video_id=video_id, language_code='en-whisper').first()
     if transcript:
-        return transcript.text
+        return transcript.text if text else transcript
     else:
         auto_transcript = Transcript.query.filter_by(video_id=video_id, language_code=language_code,
                                                      is_generated=True).first()

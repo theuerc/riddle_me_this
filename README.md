@@ -1,227 +1,104 @@
 # Riddle Me This
 
-Takes any media (mp4, text, etc), loads it into a vector database, and uses the ChatGPT API to answer questions about it.
+Takes a youtube url, gets the best transcript (a manually entered english transcript, or a locally generated english transcript using OpenAI's Whisper model--it can translate if needed), chunks and vectorizes the transcript, and loads the most similar 2000 word chunk (using cosine similarity) into ChatGPT as context for a user prompt.
 
-## Docker Quickstart
+_Basically takes a youtube video and answers any question you ask it._
 
-This app can be run completely using `Docker` and `docker-compose`. **Using Docker is recommended, as it guarantees the application is run using compatible versions of Python and Node**.
+There are helper visualization to aid with prompting, like a network of co-occuring named entities (using a window size of 7, and filtering entities using the median page rank of the network). This is a particularly helpful visualization because the context that ChatGPT is provided with is the most similar 2000 word chunk from the original text, so asking about two co-occuring entities will likely fall within a single chunk of context.
 
-There are three main services:
+Beyond the network visualization, the title, description, and other metadata are provided. The fetched transcript with and without hyperlink timestamps is provided as well, with the option to regex search for specific rows in the timestamped transcript to verify the accuracy of a specific line of text.
 
-To run the development version of the app
+Everything is cached in a local sqlite database whose ERD diagram is shown below:
+![Screen Shot 2023-04-20 at 10.51.01 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_pRZRmp%2FScreen%20Shot%202023-04-20%20at%2010.51.01%20PM.png)
 
+**Quickstart for Teaching Team:**
+
+This project requires [Docker](https://www.docker.com/). Everything else should be installed automatically.
+
+1. Clone the repo
 ```bash
-docker-compose up flask-dev
+git clone https://github.com/theuerc/riddle_me_this
 ```
 
-To run the production version of the app
-
+2. Run the following commands in the root directory of the repo:
 ```bash
-docker-compose up flask-prod
+# make the database file
+touch dev.db
+# copy the environment file
+cp .env.example .env
+# open the .env file
+nano .env
 ```
 
-The list of `environment:` variables in the `docker-compose.yml` file takes precedence over any variables specified in `.env`.
+The .env file should include Google OAuth credentials and an OpenAI API key. 
 
-To run any commands using the `Flask CLI`
+If you need to make OAuth 2.0 web app credentials for Google, [click here](https://console.cloud.google.com/apis/), set the URI to `http://localhost:8080`, and the Authorized Redirect to `http://localhost:8080/login/authorized`. 
 
+If you need an OpenAI API key, [click here](https://platform.openai.com/).
+
+The bracketed sections need to be replaced in the .env file with your credentials:
 ```bash
-docker-compose run --rm manage <<COMMAND>>
+# Environment variable overrides for local development
+FLASK_APP=autoapp.py
+FLASK_DEBUG=1
+FLASK_ENV=development
+DATABASE_URL=sqlite:////tmp/dev.db
+GUNICORN_WORKERS=1
+LOG_LEVEL=debug
+SECRET_KEY=not-so-secret
+# In production, set to a higher number, like 31556926
+SEND_FILE_MAX_AGE_DEFAULT=0
+
+# API keys for ChatGPT
+OPENAI_API_KEY=[Your API Key]
+
+# Google OAuth Credentials
+CLIENT_ID=[Your Client ID]
+CLIENT_SECRET=[Your Client Secret]
 ```
-
-Therefore, to initialize a database you would run
-
+3. Once the dev.db file is created, and all of the required information is entered in the .env file, run the following commands in the root directory of the repo:
 ```bash
+docker-compose build flask-dev
 docker-compose run --rm manage db init
 docker-compose run --rm manage db migrate
 docker-compose run --rm manage db upgrade
+docker-compose up flask-dev
 ```
+Then go to http://localhost:8080/
 
-A docker volume `node-modules` is created to store NPM packages and is reused across the dev and prod versions of the application. For the purposes of DB testing with `sqlite`, the file `dev.db` is mounted to all containers. This volume mount should be removed from `docker-compose.yml` if a production DB server is used.
-
-Go to `http://localhost:8080`. You will see a pretty welcome screen.
-
-### Running locally
-
-Run the following commands to bootstrap your environment if you are unable to run the application using Docker
-
+At this point a sqlite database should be created. You can check this by running the following command in the root directory, or you can just move to the next step:
 ```bash
-cd riddle_me_this
-pipenv install --dev
-pipenv shell
-npm install
-npm run-script build
-npm start  # run the webpack dev server and flask server using concurrently
+sqlite3 dev.db
+sqlite> .tables
+alembic_version  transcripts      videos         
+roles            users   
+sqlite> .exit
 ```
+    
 
-Go to `http://localhost:5000`. You will see a pretty welcome screen.
+4. Click the button to login with Google, and follow the steps to login. You should then be redirected to the home_logged_in page where you can enter a url.
 
-#### Database Initialization (locally)
+![Screen Shot 2023-04-20 at 11.35.37 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_HYWd9x%2FScreen%20Shot%202023-04-20%20at%2011.35.37%20PM.png)
 
-Once you have installed your DBMS, run the following to create your app's
-database tables and perform the initial migration
+5. Enter a youtube url, and click the button to get the transcript. You should then be redirected to the video_details page where you can prompt with ChatGPT or Regex search the timestamped transcript.
 
-```bash
-flask db init
-flask db migrate
-flask db upgrade
-```
+![Screen Shot 2023-04-20 at 11.36.21 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_i5Ixre%2FScreen%20Shot%202023-04-20%20at%2011.36.21%20PM.png)
 
-## Deployment
+Sample ChatGPT response:
 
-When using Docker, reasonable production defaults are set in `docker-compose.yml`
+![Screen Shot 2023-04-20 at 11.37.21 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_0Tnxcn%2FScreen%20Shot%202023-04-20%20at%2011.37.21%20PM.png)
 
-```text
-FLASK_ENV=production
-FLASK_DEBUG=0
-```
+Sample ChatGPT response to poor line of questioning:
 
-Therefore, starting the app in "production" mode is as simple as
+![Screen Shot 2023-04-20 at 11.39.06 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_kp291x%2FScreen%20Shot%202023-04-20%20at%2011.39.06%20PM.png)
 
-```bash
-docker-compose up flask-prod
-```
+Sample Entity Co-Occurrence network visualization:
 
-If running without Docker
+![Screen Shot 2023-04-20 at 11.40.36 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_qKGYvy%2FScreen%20Shot%202023-04-20%20at%2011.40.36%20PM.png)
 
-```bash
-export FLASK_ENV=production
-export FLASK_DEBUG=0
-export DATABASE_URL="<YOUR DATABASE URL>"
-npm run build   # build assets with webpack
-flask run       # start the flask server
-```
+Sample Regex search:
 
-## Shell
+![Screen Shot 2023-04-20 at 11.41.54 PM.png](..%2F..%2F..%2F..%2F..%2F..%2F..%2Fvar%2Ffolders%2F0v%2Fdh9sl13n5_gdh3hpwjglnycw0000gn%2FT%2FTemporaryItems%2FNSIRD_screencaptureui_0I6fLC%2FScreen%20Shot%202023-04-20%20at%2011.41.54%20PM.png)
 
-To open the interactive shell, run
 
-```bash
-docker-compose run --rm manage db shell
-flask shell # If running locally without Docker
-```
-
-By default, you will have access to the flask `app`.
-
-## Running Tests/Linter
-
-To run all tests, run
-
-```bash
-docker-compose run --rm manage test
-flask test # If running locally without Docker
-```
-
-To run the linter, run
-
-```bash
-docker-compose run --rm manage lint
-flask lint # If running locally without Docker
-```
-
-The `lint` command will attempt to fix any linting/style errors in the code. If you only want to know if the code will pass CI and do not wish for the linter to make changes, add the `--check` argument.
-
-## Migrations
-
-Whenever a database migration needs to be made. Run the following commands
-
-```bash
-docker-compose run --rm manage db migrate
-flask db migrate # If running locally without Docker
-```
-
-This will generate a new migration script. Then run
-
-```bash
-docker-compose run --rm manage db upgrade
-flask db upgrade # If running locally without Docker
-```
-
-To apply the migration.
-
-For a full migration command reference, run `docker-compose run --rm manage db --help`.
-
-If you will deploy your application remotely (e.g on Heroku) you should add the `migrations` folder to version control.
-You can do this after `flask db migrate` by running the following commands
-
-```bash
-git add migrations/*
-git commit -m "Add migrations"
-```
-
-Make sure folder `migrations/versions` is not empty.
-
-## Asset Management
-
-Files placed inside the `assets` directory and its subdirectories
-(excluding `js` and `css`) will be copied by webpack's
-`file-loader` into the `static/build` directory. In production, the plugin
-`Flask-Static-Digest` zips the webpack content and tags them with a MD5 hash.
-As a result, you must use the `static_url_for` function when including static content,
-as it resolves the correct file name, including the MD5 hash.
-For example
-
-```html
-<link rel="shortcut icon" href="{{static_url_for('static', filename='build/favicon.ico') }}">
-```
-
-If all of your static files are managed this way, then their filenames will change whenever their
-contents do, and you can ask Flask to tell web browsers that they
-should cache all your assets forever by including the following line
-in ``.env``:
-
-```text
-SEND_FILE_MAX_AGE_DEFAULT=31556926  # one year
-```
-
-## Heroku
-
-Before deploying to Heroku you should be familiar with the basic concepts of [Git](https://git-scm.com/) and [Heroku](https://heroku.com/).
-
-Remember to add migrations to your repository. Please check `Migrations`_ section.
-
-Since the filesystem on Heroku is ephemeral, non-version controlled files (like a SQLite database) will be lost at least once every 24 hours. Therefore, a persistent, standalone database like PostgreSQL is recommended. This application will work with any database backend that is compatible with SQLAlchemy, but we provide specific instructions for Postgres, (including the required library `psycopg2-binary`).
-
-**Note:** `psycopg2-binary` package is a practical choice for development and testing but in production it is advised to use the package built from sources. Read more in the [psycopg2 documentation](http://initd.org/psycopg/docs/install.html?highlight=production%20advised%20use%20package%20built%20from%20sources#binary-install-from-pypi).
-
-If you keep your project on GitHub you can use 'Deploy to Heroku' button thanks to which the deployment can be done in web browser with minimal configuration required.
-The configuration used by the button is stored in `app.json` file.
-
-<a href="https://heroku.com/deploy" style="display: block"><img src="https://www.herokucdn.com/deploy/button.svg" title="Deploy" alt="Deploy"></a>
-    <br>
-
-Deployment by using [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli):
-
-* Create Heroku App. You can leave your app name, change it, or leave it blank (random name will be generated)
-
-    ```bash
-    heroku create riddle_me_this
-    ```
-
-* Add buildpacks
-
-    ```bash
-    heroku buildpacks:add --index=1 heroku/nodejs
-    heroku buildpacks:add --index=1 heroku/python
-    ```
-
-* Add database addon which creates a persistent PostgresSQL database. These instructions assume you're using the free [hobby-dev](https://elements.heroku.com/addons/heroku-postgresql#hobby-dev) plan. This command also sets a `DATABASE_URL` environmental variable that your app will use to communicate with the DB.
-
-    ```bash
-    heroku addons:create heroku-postgresql:hobby-dev --version=11
-    ```
-
-* Set environmental variables (change `SECRET_KEY` value)
-
-    ```bash
-    heroku config:set SECRET_KEY=not-so-secret
-    heroku config:set FLASK_APP=autoapp.py
-    heroku config:set SEND_FILE_MAX_AGE_DEFAULT=31556926
-    ```
-
-* Please check `.env.example` to see which environmental variables are used in the project and also need to be set. The exception is `DATABASE_URL`, which Heroku sets automatically.
-
-* Deploy on Heroku by pushing to the `heroku` branch
-
-    ```bash
-    git push heroku main
-    ```
+This flask app was made with the [flask cookiecutter template](https://github.com/cookiecutter-flask/cookiecutter-flask).

@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="container-narrow">
+    <a href="{{ url_for('user.home_logged_in') }}" class="btn btn-secondary mb-3">&larr; Back to Home</a>
+        <h1 class="mt-5">Video Details</h1>
+        {% if image %}
+            <img src="{{ image }}" alt="Video Thumbnail" width="300" height="200">
+            <br>
+        {% endif %}
+
+        {% if query %}
+            <br/>
+            <h2>ChatGPT Response</h2>
+            <h5>Query</h5>
+            {{ query|safe }}
+        {% endif %}
+        <br/>
+        {% if answer %}
+            <h5>Answer</h5>
+            {{ answer|safe }}
+            <br/><br/>
+        {% endif %}
+        <h2>Enter your input for ChatGPT</h2>
+        <form id="chatGPTForm" class="form" method="POST" action="{{ url_for('user.video_details') }}" role="form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="input_text">Input Text</label>
+                <input type="text" class="form-control" id="input_text" name="input_text" placeholder="Enter your input for ChatGPT">
+            </div>
+            <p><input class="btn btn-primary" type="submit" value="Submit"></p>
+        </form>
+
+        {% if video_info %}
+            <h2>Video Info</h2>
+            {{ video_info|safe }}
+        {% endif %}
+        <br/>
+
+        {% if co_graph %}
+            <h2>Named Entity Co-occurrence</h2>
+            <div>{% include [co_graph, clust] %}</div>
+        {% endif %}
+        <br/>
+
+        {% if clust %}
+            <h2>Named Entity Clusters</h2>
+            <div>{% include clust %}</div>
+        {% endif %}
+
+        {% if transcript %}
+            <h2>Transcript</h2>
+            {{ transcript|safe }}
+        {% endif %}
+
+        <h2>Search through Table</h2>
+        <form id="searchForm" class="form" method="POST" action="{{ url_for('user.video_details') }}" role="form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="search_text">Search Text</label>
+                <input type="text" class="form-control" id="search_text" name="search_text" placeholder="Enter your search text">
+            </div>
+            <p><input class="btn btn-primary" type="submit" value="Search"></p>
+        </form>
+
+        {% if time_stamps %}
+            <h2>Transcript</h2>
+            {{ search_results|safe if search_results else time_stamps|safe }}
+        {% endif %}
+    </div>
+{% endblock %}

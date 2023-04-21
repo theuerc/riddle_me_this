@@ -18,7 +18,10 @@ RUN true
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY ["Pipfile", "shell_scripts/auto_pipenv.sh", "./"]
 RUN pip install --no-cache pipenv
-RUN pipenv install
+RUN pipenv install --skip-lock && \
+    pipenv lock --pre && \
+    pipenv install --system --deploy
+
 
 COPY package.json ./
 RUN npm install

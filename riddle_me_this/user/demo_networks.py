@@ -30,43 +30,6 @@ def download_stanza_pipeline(lang):
     return nlp
 
 
-def visualize_and_save(G, important_entities=None, file_name="graph.html"):
-    """
-    Visualize a clustered graph and save it to a file.
-
-    Args:
-        G (networkx.Graph): The clustered graph to visualize.
-        important_entities (list, optional): A list of important entities to highlight in the graph. Defaults to None.
-        file_name (str, optional): The name of the file to save the visualization to. Defaults to "graph.html".
-
-    Returns:
-        str: The name of the file the visualization was saved to.
-
-    """
-    net = Network(notebook=True)
-
-    if important_entities:
-        subgraph = G.subgraph(important_entities)
-
-        for node in subgraph.nodes():
-            net.add_node(node, label=node, color="lightblue")
-
-        for src, tgt in subgraph.edges():
-            net.add_edge(src, tgt, label="co-occurs")
-
-        net.save_graph(file_name)
-    else:
-
-        for node in G.nodes():
-            net.add_node(node, label=node, color="lightblue")
-
-        for src, tgt in G.edges():
-            net.add_edge(src, tgt)
-
-        net.save_graph(file_name)
-    return file_name
-
-
 class CoOccurrenceVisualizer:
     """
     A class for visualizing co-occurring named entities in a text.
@@ -139,6 +102,26 @@ class CoOccurrenceVisualizer:
         important_entities = [entity for entity, score in pagerank.items() if score > threshold]
         return important_entities
 
+    def visualize_and_save(self, G, important_entities, file_name="graph.html"):
+        """
+               Visualize a co-occurrence graph and save it to a file.
+
+               Args:
+                   G (networkx.Graph): The co-occurrence graph to visualize.
+                   important_entities (list): The list of important entities to include in the visualization.
+                   file_name (str, optional): The name of the file to save the visualization to. Defaults to "graph.html".
+        """
+        subgraph = G.subgraph(important_entities)
+        net = Network(notebook=True)
+
+        for node in subgraph.nodes():
+            net.add_node(node, label=node, color="lightblue")
+
+        for src, tgt in subgraph.edges():
+            net.add_edge(src, tgt, label="co-occurs")
+
+        net.save_graph(file_name)
+
     def run(self, text, file_name="graph.html"):
         """
         Run the co-occurrence visualizer on a given text.
@@ -146,15 +129,11 @@ class CoOccurrenceVisualizer:
         Args:
             text (str): The text to perform co-occurrence visualization on.
             file_name (str, optional): The name of the file to save the visualization to. Defaults to "graph.html".
-
-        Returns:
-            tuple: A tuple containing the name of the saved visualization file and a list of important entities.
         """
         doc, named_entities = self.perform_ner(text)
         G = self.build_cooccurrence_graph(doc, named_entities)
         important_entities = self.extract_important_entities(G)
-        graph_html = visualize_and_save(G, important_entities, file_name)
-        return graph_html, important_entities
+        self.visualize_and_save(G, important_entities, file_name)
 
 
 def download_en_core_web_(model="en_core_web_sm"):
@@ -294,6 +273,25 @@ class EntityClusterVisualizer:
 
         return G
 
+    def visualize_and_save(self, G, file_name="graph.html"):
+        """
+        Visualize a clustered graph and save it to a file.
+
+        Args:
+            G (networkx.Graph): The clustered graph to visualize.
+            file_name (str, optional): The name of the file to save the visualization to. Defaults to "graph.html".
+        """
+        net = Network(notebook=True)
+
+        for node in G.nodes():
+            net.add_node(node, label=node, color="lightblue")
+
+        for src, tgt in G.edges():
+            net.add_edge(src, tgt)
+
+        net.save_graph(file_name)
+
+
     def run(self, text, max_k=10, file_name="graph.html"):
         """
         Run the entity cluster visualizer on a given text.
@@ -302,17 +300,13 @@ class EntityClusterVisualizer:
             text (str): The text to perform entity clustering on.
             max_k (int, optional): The maximum number of clusters to try. Defaults to 10.
             file_name (str, optional): The name of the file to save the visualization to. Defaults to "graph.html".
-
-        Returns:
-            str: The HTML code for the visualization.
         """
         named_entities = self.perform_ner(text)
         embeddings = self.create_entity_embeddings(named_entities)
         n_clusters = self.find_optimal_clusters(embeddings, max_k)
         labels = self.apply_kmeans_clustering(embeddings, n_clusters)
         G = self.create_clustered_graph(named_entities, labels, n_clusters)
-        graph_html = visualize_and_save(G, file_name=file_name)
-        return graph_html
+        self.visualize_and_save(G, file_name)
 
 
 def main():
