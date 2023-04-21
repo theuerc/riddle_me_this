@@ -205,7 +205,7 @@ def process_video_details(video_id):
     """
     clust = None
     video_info = get_video_info(video_id)  # noqa
-    transcript_info = get_and_load_transcripts(video_id, text=False)  # noqa
+    transcript_info = get_and_load_transcripts(video_id)  # noqa
     text = transcript_info.text
     time_stamps = transcript_info.json_string
 
