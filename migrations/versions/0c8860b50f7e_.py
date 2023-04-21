@@ -24,6 +24,7 @@ def upgrade():
     sa.Column('text', sa.Text(), nullable=True),
     sa.Column('language_code', sa.String(length=10), nullable=False),
     sa.Column('is_generated', sa.Boolean(), nullable=False),
+    sa.Column('video_id', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     )
     op.create_table('videos',
@@ -45,7 +46,9 @@ def upgrade():
     sa.Column('statistics_like_count', sa.Integer(), nullable=True),
     sa.Column('statistics_favorite_count', sa.Integer(), nullable=True),
     sa.Column('statistics_comment_count', sa.Integer(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.Column('video_id', sa.String(), nullable=True),
+    sa.Column('snippet_thumbnails_maxres_url', sa.String(), nullable=True),
+    sa.PrimaryKeyConstraint('id'),
     )
     # ### end Alembic commands ###
 
