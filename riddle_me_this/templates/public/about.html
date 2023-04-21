@@ -1,12 +1,24 @@
-
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container">
-    <h1 class="mt-5">About</h1>
-    <div class="row">
-      <p class="lead">This template was created by <a href="http://github.com/sloria/">Steven Loria</a> for use with the <a href="http://github.com/audreyr/cookiecutter/">cookiecutter</a> package by <a href="http://github.com/audreyr/">Audrey Roy</a>.</p>
+    <div class="container">
+        <h1 class="mt-5">About</h1>
+        <div class="row">
+            <p class="lead">
+                I made this app because I saw my dad watching a 3 hour youtube video of a school board meeting from
+                start to finish, and I thought that that process could be optimized. This tool can generate a
+                searchable english transcript when none are available (even from foreign languages), and allows for
+                querying that transcript with ChatGPT or with regex searching.
+                <br><br>
+                In more technical language, this app takes a youtube url, gets the best transcript (a manually entered
+                english transcript, or a locally generated english transcript using OpenAI's Whisper model), chunks and
+                vectorizes the transcript, and loads the most similar 2000 word chunk (using cosine similarity) into
+                ChatGPT as context for a user prompt.
+                <br><br>
+                <i>It basically takes a youtube video and answers any question you ask it, without bankrupting you with
+                    API fees.</i>
+            </p>
+        </div>
     </div>
-</div>
 {% endblock %}
 

@@ -3,11 +3,9 @@
 import logging
 import sys
 
-from flask import Flask, render_template, session, jsonify, url_for
-import os
+from flask import Flask, render_template
 
 from riddle_me_this import commands, public, user
-from riddle_me_this.oauth import init_oauth
 from riddle_me_this.extensions import (
     bcrypt,
     cache,

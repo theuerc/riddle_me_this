@@ -3,7 +3,6 @@
 import datetime as dt
 
 from flask_login import UserMixin
-from sqlalchemy import ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from riddle_me_this.database import Column, PkModel, db, reference_col, relationship

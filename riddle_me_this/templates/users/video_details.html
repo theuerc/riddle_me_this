@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% block content %}
     <div class="container-narrow">
-    <a href="{{ url_for('user.home_logged_in') }}" class="btn btn-secondary mb-3">&larr; Back to Home</a>
+        <a href="{{ url_for('user.home_logged_in') }}" class="btn btn-secondary mb-3">&larr; Back to Home</a>
         <h1 class="mt-5">Video Details</h1>
         {% if image %}
             <img src="{{ image }}" alt="Video Thumbnail" width="300" height="200">
@@ -25,7 +25,8 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="input_text">Input Text</label>
-                <input type="text" class="form-control" id="input_text" name="input_text" placeholder="Enter your input for ChatGPT">
+                <input type="text" class="form-control" id="input_text" name="input_text"
+                       placeholder="Enter your input for ChatGPT">
             </div>
             <p><input class="btn btn-primary" type="submit" value="Submit"></p>
         </form>
@@ -52,19 +53,58 @@
             {{ transcript|safe }}
         {% endif %}
 
-        <h2>Search through Table</h2>
-        <form id="searchForm" class="form" method="POST" action="{{ url_for('user.video_details') }}" role="form">
+        <h2>Search through Timestamped Transcript</h2>
+        <form id="searchForm" class="form" method="POST" action="{{ url_for('user.video_details') }}" role="form"
+              onsubmit="event.preventDefault(); submitForm();">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="search_text">Search Text</label>
-                <input type="text" class="form-control" id="search_text" name="search_text" placeholder="Enter your search text">
+                <input type="text" class="form-control" id="search_text" name="search_text"
+                       placeholder="Enter your search text">
             </div>
             <p><input class="btn btn-primary" type="submit" value="Search"></p>
         </form>
 
-        {% if time_stamps %}
-            <h2>Transcript</h2>
-            {{ search_results|safe if search_results else time_stamps|safe }}
-        {% endif %}
+        <div id="search-results">
+            {% if time_stamps %}
+                <h2>Transcript</h2>
+                {{ search_results|safe if search_results else time_stamps|safe }}
+            {% endif %}
+        </div>
+        <script>
+            /**
+             * Submits the search form via AJAX to update the search-results div
+             * with new content without refreshing the page.
+             *
+             * This function is called when the search form is submitted. It sends
+             * an AJAX request with the form data to the server, processes the
+             * response, and updates the search-results div with the new content
+             * returned by the server.
+             *
+             * In case of an error, it logs the error to the console.
+             */
+            function submitForm() {
+                const form = $('#searchForm');
+                const formData = new FormData(form[0]);
+
+                $.ajax({
+                    type: form.attr('method'),
+                    url: form.attr('action'),
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        // Update the search results or time_stamps div with the new content
+                        const parser = new DOMParser();
+                        const htmlDoc = parser.parseFromString(response, 'text/html');
+                        const newContent = htmlDoc.querySelector('#search-results');
+                        document.querySelector('#search-results').innerHTML = newContent.innerHTML;
+                    },
+                    error: function (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+        </script>
     </div>
 {% endblock %}

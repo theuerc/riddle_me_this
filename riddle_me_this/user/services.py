@@ -2,12 +2,14 @@
 """Services for the user app."""
 from __future__ import unicode_literals
 
+import logging
 import os
 import sys
 from io import BytesIO
 
 import dotenv
 import openai
+import torch
 import tqdm
 import whisper.transcribe
 import yt_dlp as youtube_dl
@@ -16,15 +18,19 @@ from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
 
 from riddle_me_this.oauth import get_google_token
-from riddle_me_this.user.data_loading import *
-import logging
+from riddle_me_this.user.data_loading import *  # noqa: F403
+from riddle_me_this.user.models import Transcript, Video
 
 dotenv.load_dotenv()
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
-logging.basicConfig(filename='../../record.log', level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
+logging.basicConfig(
+    filename="../../record.log",
+    level=logging.DEBUG,
+    format=f"%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s",  # noqa: F541
+)
 
 
 class NamedBytesIO(BytesIO):
@@ -39,8 +45,10 @@ class NamedBytesIO(BytesIO):
 class _CustomProgressBar(tqdm.tqdm):
     """
     Makes a custom progress bar for the transcribe_whisper function.
+
     https://github.com/openai/whisper/discussions/850
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._current = self.n  # Set the initial value
@@ -87,12 +95,14 @@ def get_youtube_video_id(url):
     -------
     ValueError : If the YouTube URL is not valid.
     """
-    regex = re.compile(r'^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*')
+    regex = re.compile(  # noqa: F405
+        r"^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*"  # noqa
+    )
     match = regex.match(url)
     if match and len(match.group(2)) == 11:
         return match.group(2)
     else:
-        raise ValueError('Could not parse YouTube URL.')
+        raise ValueError("Could not parse YouTube URL.")
 
 
 def get_video_info(video_id):
@@ -112,7 +122,7 @@ def get_video_info(video_id):
     -------
     Exception : If the YouTube service could not be created.
     """
-    video_info = Video.query.filter_by(video_id=video_id).first()
+    video_info = Video.query.filter_by(video_id=video_id).first()  # noqa
     if video_info:
         return video_info
     else:
@@ -120,15 +130,16 @@ def get_video_info(video_id):
         if not youtube:
             raise Exception("Failed to create YouTube service.")
 
-        video_info = youtube.videos().list(
-            part="snippet,statistics,contentDetails,status",
-            id=video_id
-        ).execute()
-        load_video_info(video_info)
+        video_info = (
+            youtube.videos()
+            .list(part="snippet,statistics,contentDetails,status", id=video_id)
+            .execute()
+        )
+        load_video_info(video_info)  # noqa
         return get_video_info(video_id)
 
 
-def get_and_load_transcripts(video_id, language_code='en', local=True, text=True):
+def get_and_load_transcripts(video_id, language_code="en", local=True, text=True):
     """
     Searches the database for a transcript with the given video_id and language_code.
 
@@ -146,29 +157,50 @@ def get_and_load_transcripts(video_id, language_code='en', local=True, text=True
     """
 
     # Query the database for a transcript with the given video_id and language_code
-    transcript = Transcript.query.filter_by(video_id=video_id, language_code=language_code,
-                                            is_generated=False).first() or \
-                 Transcript.query.filter_by(video_id=video_id, language_code='en-whisper').first()
+    transcript = (
+        Transcript.query.filter_by(
+            video_id=video_id, language_code=language_code, is_generated=False
+        ).first()
+        or Transcript.query.filter_by(  # noqa
+            video_id=video_id, language_code="en-whisper"
+        ).first()
+    )
     if transcript:
         return transcript.text if text else transcript
     else:
-        auto_transcript = Transcript.query.filter_by(video_id=video_id, language_code=language_code,
-                                                     is_generated=True).first()
+        auto_transcript = Transcript.query.filter_by(
+            video_id=video_id, language_code=language_code, is_generated=True
+        ).first()
         if not auto_transcript:
             try:
                 transcripts = get_transcripts(video_id)
-            except Exception as e:
-                logging.error(e)
-                transcripts = [{'video_id': video_id, 'transcript': [{'text': 'This is fake text'}], 'text': None,
-                                'language_code': 'en', 'is_generated': True}]
-            load_transcripts(video_id, transcripts)
+            except Exception as e:  # noqa
+                logging.error(e)  # noqa
+                transcripts = [
+                    {
+                        "video_id": video_id,
+                        "transcript": [{"text": "This is fake text"}],
+                        "text": None,
+                        "language_code": "en",
+                        "is_generated": True,
+                    }
+                ]  # noqa
+            load_transcripts(video_id, transcripts)  # noqa
             return get_and_load_transcripts(video_id)
         else:
-            audio_file = download_audio_from_youtube(f"https://www.youtube.com/watch?v={video_id}")
-            transcripts = transcribe_whisper_local(audio_file) if local else transcribe_audio_with_whisper(audio_file)
+            audio_file = download_audio_from_youtube(
+                f"https://www.youtube.com/watch?v={video_id}"
+            )
+            transcripts = (
+                transcribe_whisper_local(audio_file)
+                if local
+                else transcribe_audio_with_whisper(audio_file)
+            )
             os.remove(f"/app/{audio_file.split('/')[-1]}")
-            load_transcripts(video_id, transcripts)
-            return get_and_load_transcripts(video_id)
+            load_transcripts(video_id, transcripts)  # noqa
+            return get_and_load_transcripts(
+                video_id, language_code=language_code, local=local, text=text
+            )
 
 
 def get_transcripts(video_id):
@@ -195,7 +227,12 @@ def get_transcripts(video_id):
 
         # Add the transcript object along with the language_code and is_generated attributes to the transcripts list
         transcripts.append(
-            {'transcript': transcript.fetch(), 'language_code': language_code, 'is_generated': is_generated})
+            {
+                "transcript": transcript.fetch(),
+                "language_code": language_code,
+                "is_generated": is_generated,
+            }
+        )
 
     # Return the list of transcripts
     return transcripts
@@ -223,8 +260,14 @@ def transcribe_audio_with_whisper(audio_file):
     response = openai.Audio.transcribe("whisper-1", audio_file)
     # Extract the transcription from the response
     transcription = response["text"].strip()
-    return [{'text': transcription, 'transcript': [{'text': transcription}], 'language_code': 'en-whisper',
-             'is_generated': False}]
+    return [
+        {
+            "text": transcription,
+            "transcript": [{"text": transcription}],
+            "language_code": "en-whisper",
+            "is_generated": False,
+        }
+    ]
 
 
 def transcribe_whisper_local(audio_location):
@@ -241,17 +284,25 @@ def transcribe_whisper_local(audio_location):
     transcription : list of dict
         A list containing a single transcript object.
     """
-    transcribe_module = sys.modules['whisper.transcribe']
+    transcribe_module = sys.modules["whisper.transcribe"]
     transcribe_module.tqdm.tqdm = _CustomProgressBar
     torch.cuda.is_available()
-    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-    model = whisper.load_model("base", device=DEVICE)
-    transcription = whisper.transcribe(model, audio_location, fp16=False, language="English", verbose=True)
-    return [{'text': transcription['text'], 'transcript': transcription['segments'], 'language_code': 'en-whisper',
-             'is_generated': False}]
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model = whisper.load_model("tiny", device=device)
+    transcription = whisper.transcribe(
+        model, audio_location, fp16=False, language="English", verbose=True
+    )
+    return [
+        {
+            "text": transcription["text"],
+            "transcript": transcription["segments"],
+            "language_code": "en-whisper",
+            "is_generated": False,
+        }
+    ]
 
 
-def download_audio_from_youtube(url, codec='mp3', quality='64'):
+def download_audio_from_youtube(url, codec="mp3", quality="64"):
     """
     Downloads the audio file of a YouTube video and returns its location.
 
@@ -270,14 +321,16 @@ def download_audio_from_youtube(url, codec='mp3', quality='64'):
         The location of the downloaded audio file.
     """
     ydl_opts = {
-        'format': 'bestaudio/best',
-        'outtmpl': './%(id)s.%(ext)s',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': codec,
-            'preferredquality': quality,
-        }],
+        "format": "bestaudio/best",
+        "outtmpl": "./%(id)s.%(ext)s",
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": codec,
+                "preferredquality": quality,
+            }
+        ],
     }
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(url, download=True)
+        _ = ydl.extract_info(url, download=True)
     return f"./{get_youtube_video_id(url)}.{codec}"

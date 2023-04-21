@@ -1,18 +1,31 @@
 # -*- coding: utf-8 -*-
 """User views."""
-from flask import Blueprint, render_template, current_app, request, session, redirect, url_for, flash
-from flask_login import login_required, current_user
-from riddle_me_this.user.services import *
-from riddle_me_this.user.visualizations import *
-
-import logging
-import time
-import os
-import pandas as pd
 import json
+import logging
+import os
 
-logging.basicConfig(filename='../../record.log', level=logging.DEBUG,
-                    format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
+import pandas as pd
+from flask import (
+    Blueprint,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    render_template_string,
+    request,
+    session,
+    url_for,
+)
+from flask_login import login_required
+
+from riddle_me_this.user.services import *  # noqa
+from riddle_me_this.user.visualizations import *  # noqa
+
+logging.basicConfig(
+    filename="../../record.log",
+    level=logging.DEBUG,
+    format=f"%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s",  # noqa: F541
+)
 
 blueprint = Blueprint("user", __name__, url_prefix="/users", static_folder="../static")
 
@@ -29,7 +42,7 @@ def members():
     return render_template("users/members.html")
 
 
-@blueprint.route("/home_logged_in/", methods=['GET', 'POST'])
+@blueprint.route("/home_logged_in/", methods=["GET", "POST"])
 @login_required
 def home_logged_in():
     """
@@ -40,23 +53,23 @@ def home_logged_in():
     """
     logging.info("Hello from from the logged in home page!")
     video_link = None
-    session['id_submitted'] = None
+    session["id_submitted"] = None
 
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
-            video_link = request.form['link']
-            video_id = get_youtube_video_id(video_link)
-        except Exception as e:
+            video_link = request.form["link"]
+            video_id = get_youtube_video_id(video_link)  # noqa
+        except Exception as e:  # noqa
             logging.error(e)
-            flash('Please enter a valid YouTube link', 'danger')
-            return redirect(url_for('user.home_logged_in'))
-        session['id_submitted'] = video_id
-        return redirect(url_for('user.video_details'))
+            flash("Please enter a valid YouTube link", "danger")
+            return redirect(url_for("user.home_logged_in"))
+        session["id_submitted"] = video_id
+        return redirect(url_for("user.video_details"))
 
     return render_template("users/home_logged_in.html", video_link=video_link)
 
 
-@blueprint.route("/video_details/", methods=['GET', 'POST'])
+@blueprint.route("/video_details/", methods=["GET", "POST"])
 @login_required
 def video_details():
     """
@@ -65,35 +78,78 @@ def video_details():
     Returns:
         A rendered video details page or redirects to the home_logged_in page.
     """
-    if not (video_id := session.get('id_submitted')):
-        return redirect(url_for('user.home_logged_in'))
+    if not (video_id := session.get("id_submitted")):
+        return redirect(url_for("user.home_logged_in"))
     query = None
     answer = None
     search_text = None
     search_results = None
-    video_info, text, image, clust, co_graph, time_stamps = process_video_details(video_id)
+    video_info, text, image, clust, co_graph, time_stamps = process_video_details(
+        video_id
+    )
 
-    if request.method == 'POST':
-        logging.info('POST request received')
+    if request.method == "POST":
+        logging.info("POST request received")
         try:
-            query = request.form['input_text']
-            answer = get_response(text, query)
-        except Exception as e:
+            query = request.form["input_text"]
+            answer = get_response(text, query)  # noqa
+        except Exception as e:  # noqa
             logging.error(e)
         try:
-            search_text = request.form['search_text']
+            search_text = request.form["search_text"]
             if search_text:
-                search_results = time_stamps[time_stamps['text'].str.contains(search_text, case=False, regex=True)].copy()
-                search_results = search_results.to_html(index=False, header=True, escape=False,
-                                                classes='table table-striped table-hover', justify='left')
-        except Exception as e:
+                search_results = time_stamps[
+                    time_stamps["text"].str.contains(
+                        search_text, case=False, regex=True
+                    )
+                ].copy()
+                search_results = search_results.to_html(
+                    index=False,
+                    header=True,
+                    escape=False,
+                    classes="table table-striped table-hover",
+                    justify="left",
+                )
+                if request.is_xhr:
+                    return jsonify(
+                        {"search_results": render_template_string(search_results)}
+                    )
+                else:
+                    return render_template(
+                        "users/video_details.html",
+                        video_info=video_info,
+                        transcript=text,
+                        query=query,
+                        answer=answer,
+                        image=image,
+                        co_graph=co_graph,
+                        clust=clust,
+                        time_stamps=time_stamps,
+                        search_results=search_results,
+                    )
+        except Exception as e:  # noqa
             logging.error(e)
 
-    time_stamps = time_stamps.to_html(index=False, header=True, escape=False,
-                                      classes='table table-striped table-hover', justify='left')
+    time_stamps = time_stamps.to_html(
+        index=False,
+        header=True,
+        escape=False,
+        classes="table table-striped table-hover",
+        justify="left",
+    )
 
-    return render_template("users/video_details.html", video_info=video_info, transcript=text, query=query,
-                           answer=answer, image=image, co_graph=co_graph, clust=clust, time_stamps=time_stamps, search_results=search_results)
+    return render_template(
+        "users/video_details.html",
+        video_info=video_info,
+        transcript=text,
+        query=query,
+        answer=answer,
+        image=image,
+        co_graph=co_graph,
+        clust=clust,
+        time_stamps=time_stamps,
+        search_results=search_results,
+    )
 
 
 def seconds_to_youtube_time(seconds):
@@ -144,15 +200,12 @@ def process_video_details(video_id):
         video_id (str): The YouTube video ID.
 
     Returns:
-        tuple: A tuple containing video information, transcript, image URL, cluster graph, and co-occurrence graph.
+        tuple: A tuple containing video information, transcript, image URL,
+        cluster graph, and co-occurrence graph.
     """
-    image = None
-    query = None
-    answer = None
     clust = None
-    co_graph = None
-    video_info = get_video_info(video_id)
-    transcript_info = get_and_load_transcripts(video_id, text=False)
+    video_info = get_video_info(video_id)  # noqa
+    transcript_info = get_and_load_transcripts(video_id, text=False)  # noqa
     text = transcript_info.text
     time_stamps = transcript_info.json_string
 
@@ -166,24 +219,43 @@ def process_video_details(video_id):
 
     file = f"/app/riddle_me_this/templates/users/video_networks/{video_id}co_occurrence_graph.html"
     if not os.path.exists(file):
-        co_occurrence_visualizer = CoOccurrenceVisualizer()
+        co_occurrence_visualizer = CoOccurrenceVisualizer()  # noqa
         co_occurrence_visualizer.run(text, file_name=file)
     co_graph = f"/users/video_networks/{video_id}co_occurrence_graph.html"
 
-    video_info = pd.DataFrame({'title': (info := video_info).snippet_title,
-                               'channel': info.snippet_channel_title,
-                               'description': info.snippet_description,
-                               'published': info.snippet_published_at,
-                               'views': info.statistics_view_count,
-                               'likes': info.statistics_like_count,
-                               'comment_count': info.statistics_comment_count,
-                               'license': info.status_license
-                               }, index=[0]).T.to_html(index=True, header=False,
-                        classes='table table-striped table-hover', justify='left')
-    transcript = pd.DataFrame({'transcript_text': text}, index=[0]).to_html(
-        index=False, header=True, classes='table table-striped table-hover', justify='left')
-    time_stamps = pd.json_normalize(json.loads(time_stamps))[['text', 'start']]
-    time_stamps['start'] = time_stamps['start'].apply(lambda x: create_hyperlink(video_id, x, time_stamps.index.get_loc(time_stamps.index[time_stamps['start'] == x][0]) + 1))
-    time_stamps = time_stamps.rename(columns={'start': 'link'})
+    video_info = pd.DataFrame(
+        {
+            "title": (info := video_info).snippet_title,
+            "channel": info.snippet_channel_title,
+            "description": info.snippet_description,
+            "published": info.snippet_published_at,
+            "views": info.statistics_view_count,
+            "likes": info.statistics_like_count,
+            "comment_count": info.statistics_comment_count,
+            "license": info.status_license,
+        },
+        index=[0],
+    ).T.to_html(
+        index=True,
+        header=False,
+        classes="table table-striped table-hover",
+        justify="left",
+    )
+    transcript = pd.DataFrame({"transcript_text": text}, index=[0]).to_html(
+        index=False,
+        header=True,
+        classes="table table-striped table-hover",
+        justify="left",
+    )
+    time_stamps = pd.json_normalize(json.loads(time_stamps))[["text", "start"]]
+    time_stamps["start"] = time_stamps["start"].apply(
+        lambda x: create_hyperlink(
+            video_id,
+            x,
+            time_stamps.index.get_loc(time_stamps.index[time_stamps["start"] == x][0])
+            + 1,  # noqa
+        )
+    )
+    time_stamps = time_stamps.rename(columns={"start": "link"})
     image = info.snippet_thumbnails_maxres_url
     return video_info, transcript, image, clust, co_graph, time_stamps

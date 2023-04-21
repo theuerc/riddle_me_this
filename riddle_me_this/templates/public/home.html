@@ -1,16 +1,24 @@
-
 {% extends "layout.html" %}
 {% block content %}
-<!-- Main jumbotron for a primary marketing message or call to action -->
-<div class="jumbotron">
-    <div class="container">
+    <!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="container-narrow">
+        <div class="container">
 
-      <h1 class="display-3">Welcome to Riddle Me This</h1>
+            <h3 class="display-4">Welcome to Riddle Me This</h3>
 
-      <p>This is an app that allows the user to interact with YouTube Data in novel ways. </p>
-        <p>Sign in with Google to continue.</p>
-        <p><a href="{{ google_login_url }}" class="btn btn-primary btn-large">Log in with Google</a></p>
+            <style>
+                .full-width-img {
+                    width: 100%;
+                    height: auto;
+                }
+            </style>
+
+            <img src="static/build/Screen Shot 2023-04-21 at 12.18.44 AM.png" alt="Riddle Me This"
+                 class="full-width-img">
+            <br/><br/>
+            <p>Answer any question you have about a youtube video. Log in with Google to continue:</p>
+            <p><a href="{{ google_login_url }}" class="btn btn-primary btn-large">Log in with Google</a></p>
+        </div>
     </div>
-</div>
 {% endblock %}
 

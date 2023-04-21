@@ -1,14 +1,17 @@
-import stanza
-import spacy
-import pandas as pd
+# -*- coding: utf-8 -*-
+"""Demo file for networks in project."""
+
+import json
+import logging
+
 import networkx as nx
+import numpy as np
+import spacy
+import stanza
 from pyvis.network import Network
 from sklearn.cluster import KMeans
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import silhouette_score
-import numpy as np
 from spacy.cli import download
-import logging
 
 
 def download_stanza_pipeline(lang):
@@ -24,7 +27,7 @@ def download_stanza_pipeline(lang):
     try:
         nlp = stanza.Pipeline(lang, processors="tokenize,ner")
     except OSError:
-        logging.info(f"Model not found. Downloading {lang}..")
+        logging.info(f"Model not found. Downloading {lang}..")  # noqa: W1203
         stanza.download(lang)
         nlp = stanza.Pipeline(lang, processors="tokenize,ner")
     return nlp
@@ -37,6 +40,7 @@ class CoOccurrenceVisualizer:
     Attributes:
         nlp (stanza.Pipeline): A pipeline for performing named entity recognition.
     """
+
     def __init__(self, lang="en"):
         """
         Initialize a CoOccurrenceVisualizer object.
@@ -73,13 +77,15 @@ class CoOccurrenceVisualizer:
         Returns:
             networkx.Graph: The co-occurrence graph.
         """
-        G = nx.Graph()
+        G = nx.Graph()  # noqa: N806
         G.add_nodes_from(named_entities)
 
         for sent in doc.sentences:
             for idx, word in enumerate(sent.words):
                 if word.text in named_entities:
-                    for neighbor_idx in range(idx + 1, min(idx + 1 + window_size, len(sent.words))):
+                    for neighbor_idx in range(
+                        idx + 1, min(idx + 1 + window_size, len(sent.words))
+                    ):
                         neighbor = sent.words[neighbor_idx]
                         if neighbor.text in named_entities:
                             G.add_edge(word.text, neighbor.text)
@@ -87,7 +93,7 @@ class CoOccurrenceVisualizer:
         return G
 
     @staticmethod
-    def extract_important_entities(G):
+    def extract_important_entities(G):  # noqa: N803
         """
         Extract the important entities from a co-occurrence graph.
 
@@ -99,17 +105,21 @@ class CoOccurrenceVisualizer:
         """
         pagerank = nx.pagerank(G)
         threshold = np.mean(list(pagerank.values()))
-        important_entities = [entity for entity, score in pagerank.items() if score > threshold]
+        important_entities = [
+            entity for entity, score in pagerank.items() if score > threshold
+        ]
         return important_entities
 
-    def visualize_and_save(self, G, important_entities, file_name="graph.html"):
+    def visualize_and_save(
+        self, G, important_entities, file_name="graph.html"  # noqa
+    ):  # noqa: N803
         """
-               Visualize a co-occurrence graph and save it to a file.
+        Visualize a co-occurrence graph and save it to a file.
 
-               Args:
-                   G (networkx.Graph): The co-occurrence graph to visualize.
-                   important_entities (list): The list of important entities to include in the visualization.
-                   file_name (str, optional): The name of the file to save the visualization to. Defaults to "graph.html".
+        Args:
+            G (networkx.Graph): The co-occurrence graph to visualize.
+            important_entities (list): The list of important entities to include in the visualization.
+            file_name (str, optional): The name of the file to save the visualization to. Defaults to "graph.html".
         """
         subgraph = G.subgraph(important_entities)
         net = Network(notebook=True)
@@ -128,10 +138,11 @@ class CoOccurrenceVisualizer:
 
         Args:
             text (str): The text to perform co-occurrence visualization on.
-            file_name (str, optional): The name of the file to save the visualization to. Defaults to "graph.html".
+            file_name (str, optional): The name of the file to save the visualization to.
+            Defaults to "graph.html".
         """
         doc, named_entities = self.perform_ner(text)
-        G = self.build_cooccurrence_graph(doc, named_entities)
+        G = self.build_cooccurrence_graph(doc, named_entities)  # noqa
         important_entities = self.extract_important_entities(G)
         self.visualize_and_save(G, important_entities, file_name)
 
@@ -149,7 +160,7 @@ def download_en_core_web_(model="en_core_web_sm"):
     try:
         nlp = spacy.load(model)
     except OSError:
-        logging.info(f"Model not found. Downloading {model}..")
+        logging.info(f"Model not found. Downloading {model}..")  # noqa
         download(model)
         nlp = spacy.load(model)
     return nlp
@@ -174,7 +185,7 @@ class EntityClusterVisualizer:
         self.nlp_stanza, self.nlp_spacy = self.download_pipelines(lang)
 
     @staticmethod
-    def download_pipelines(lang):
+    def download_pipelines(lang="en"):
         """
         Download and return Stanza and Spacy pipelines for a given language.
 
@@ -184,7 +195,7 @@ class EntityClusterVisualizer:
         Returns:
             tuple: A tuple containing the downloaded Stanza and Spacy pipelines.
         """
-        nlp_stanza = download_stanza_pipeline('en')
+        nlp_stanza = download_stanza_pipeline(lang)
         nlp_spacy = download_en_core_web_()
         return nlp_stanza, nlp_spacy
 
@@ -199,7 +210,12 @@ class EntityClusterVisualizer:
             list: The list of named entities.
         """
         doc = self.nlp_stanza(text)
-        named_entities = [ent.text for ent in doc.ents if ent.type in {"PERSON", "ORG", "PRODUCT", "GPE", "EVENT", "FAC", "LANGUAGE", "LAW"}]
+        named_entities = [
+            ent.text
+            for ent in doc.ents
+            if ent.type
+            in {"PERSON", "ORG", "PRODUCT", "GPE", "EVENT", "FAC", "LANGUAGE", "LAW"}
+        ]
         return named_entities
 
     def create_entity_embeddings(self, named_entities):
@@ -230,7 +246,7 @@ class EntityClusterVisualizer:
         iters = range(2, max_k + 1, 2)
         s_scores = []
         for k in iters:
-            kmeans = KMeans(n_clusters=k, random_state=42, n_init='auto')
+            kmeans = KMeans(n_clusters=k, random_state=42, n_init="auto")
             kmeans.fit(data)
             s_scores.append(silhouette_score(data, kmeans.labels_))
 
@@ -248,7 +264,7 @@ class EntityClusterVisualizer:
         Returns:
             list: The cluster labels.
         """
-        kmeans = KMeans(n_clusters=n_clusters, n_init='auto')
+        kmeans = KMeans(n_clusters=n_clusters, n_init="auto")
         labels = kmeans.fit_predict(embeddings)
         return labels
 
@@ -264,16 +280,25 @@ class EntityClusterVisualizer:
         Returns:
             networkx.Graph: The clustered graph.
         """
-        G = nx.Graph()
+        G = nx.Graph()  # noqa
         G.add_nodes_from(named_entities)
 
         for i in range(n_clusters):
-            cluster_entities = [named_entities[j] for j in range(len(named_entities)) if labels[j] == i]
-            G.add_edges_from([(src, tgt) for src in cluster_entities for tgt in cluster_entities if src != tgt])
+            cluster_entities = [
+                named_entities[j] for j in range(len(named_entities)) if labels[j] == i
+            ]
+            G.add_edges_from(
+                [
+                    (src, tgt)
+                    for src in cluster_entities
+                    for tgt in cluster_entities
+                    if src != tgt
+                ]
+            )
 
         return G
 
-    def visualize_and_save(self, G, file_name="graph.html"):
+    def visualize_and_save(self, G, file_name="graph.html"):  # noqa
         """
         Visualize a clustered graph and save it to a file.
 
@@ -291,7 +316,6 @@ class EntityClusterVisualizer:
 
         net.save_graph(file_name)
 
-
     def run(self, text, max_k=10, file_name="graph.html"):
         """
         Run the entity cluster visualizer on a given text.
@@ -299,26 +323,32 @@ class EntityClusterVisualizer:
         Args:
             text (str): The text to perform entity clustering on.
             max_k (int, optional): The maximum number of clusters to try. Defaults to 10.
-            file_name (str, optional): The name of the file to save the visualization to. Defaults to "graph.html".
+            file_name (str, optional): The name of the file to save the visualization to.
+            Defaults to "graph.html".
         """
         named_entities = self.perform_ner(text)
         embeddings = self.create_entity_embeddings(named_entities)
         n_clusters = self.find_optimal_clusters(embeddings, max_k)
         labels = self.apply_kmeans_clustering(embeddings, n_clusters)
-        G = self.create_clustered_graph(named_entities, labels, n_clusters)
+        G = self.create_clustered_graph(named_entities, labels, n_clusters)  # noqa
         self.visualize_and_save(G, file_name)
 
 
 def main():
-    # load a text file
-    with open("../../transcript.txt", "r") as f:
-        text = f.read()
+    """Test function."""
+    # generates two html files with networks. Only co_occurrence is used
+    # in the final project, as there was a bug with Jinja 2 that
+    # only allowed me to include one
+    with open("transcript.json", "r", encoding="utf-8") as f:
+        # transcript is written by ChatGPT
+        transcript = json.load(f)
+    text = transcript["text"]
 
     co_occurrence_visualizer = CoOccurrenceVisualizer()
-    co_occurrence_visualizer.run(text, "co_occurrence_graph.html")
+    co_occurrence_visualizer.run(text, "./co_occurrence_graph.html")
 
     entity_cluster_visualizer = EntityClusterVisualizer()
-    entity_cluster_visualizer.run(text, 10, "entity_cluster_graph.html")
+    entity_cluster_visualizer.run(text, 10, "./entity_cluster_graph.html")
 
 
 if __name__ == "__main__":

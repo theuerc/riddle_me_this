@@ -2,15 +2,22 @@
 {% block content %}
     <div class="container-narrow">
         <h1 class="mt-5">Welcome {{ current_user.username }}</h1>
-        <p>Enter a link to a YouTube Video. </p>
-        <form id="videoForm" class="form" method="POST" action="{{ url_for('user.home_logged_in') }}" role="form">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <p>Enter a link to a YouTube Video.</p>
+        <form id="videoForm" class="form" method="POST" action="{{ url_for('user.home_logged_in') }}" role="form" onsubmit="showLoading();">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
-                <input type="text" class="form-control" id="link" name="link" placeholder="https://www.youtube.com/watch?v=example">
+                <input type="text" class="form-control" id="link" name="link"
+                       placeholder="https://www.youtube.com/watch?v=example">
             </div>
             <p><input class="btn btn-primary" type="submit" value="Submit"></p>
+            <p id="loadingText" style="display:none;">Loading...</p>
         </form>
-
-
+        <p id="whisperText" style="display:none;">Whisper transcribes at about 1 minute real-time for every 6 minutes of video. It is only used if there is not a manually entered transcript available, and if you are seeing this message, then it is probably running.</p>
     </div>
+    <script>
+    function showLoading() {
+        document.getElementById('loadingText').style.display = 'block';
+        document.getElementById('whisperText').style.display = 'block';
+    }
+    </script>
 {% endblock %}
