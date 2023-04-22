@@ -12,7 +12,7 @@ There are helper visualization to aid with prompting, like a network of co-occur
 
 Beyond the network visualization, the title, description, and other metadata are provided. The fetched transcript with and without hyperlink timestamps is provided as well, with the option to regex search for specific rows in the timestamped transcript to verify the accuracy of a specific line of text.
 
-Everything is cached in a local sqlite database whose ERD diagram is shown below:
+Everything is cached in a local sqlite database whose ERD diagram is shown below. [This link](https://docs.google.com/document/d/1tlidD6Pg1W4ttQjmMCXoJ8pUim06NXVRSRTSVl0Uwmw/) describes the differences in performance caching vs. no caching.
 ![Screen Shot 2023-04-20 at 11.56.30 PM.png](assets%2Fimg%2FScreen%20Shot%202023-04-20%20at%2011.56.30%20PM.png)
 
 **Quickstart for Teaching Team:**
