@@ -19,7 +19,6 @@ jobs:
       - name: Install Python dependencies
         run: |
           pipenv install
-          pipenv lock --pre
           pipenv install --dev
       - name: Install Node dependencies
         run: npm install
