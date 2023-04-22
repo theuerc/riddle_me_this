@@ -8,7 +8,7 @@ _Basically takes a youtube video and answers any question you ask it._
 
 There are helper visualization to aid with prompting, like a network of co-occuring named entities (using a window size of 7, and filtering entities using the median page rank of the network). This is a particularly helpful visualization because the context that ChatGPT is provided with is the most similar 2000 word chunk from the original text, so asking about two co-occuring entities will likely fall within a single chunk of context.
 
-[Data Structures README](https://github.com/theuerc/riddle_me_this/tree/main/network%20demo)
+[Read More About The Data Structures](https://github.com/theuerc/riddle_me_this/tree/main/network%20demo)
 
 Beyond the network visualization, the title, description, and other metadata are provided. The fetched transcript with and without hyperlink timestamps is provided as well, with the option to regex search for specific rows in the timestamped transcript to verify the accuracy of a specific line of text.
 
