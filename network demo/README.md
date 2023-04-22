@@ -6,7 +6,7 @@ The first network is a co-occurrence network of named entities. The network is c
 
 Since these networks can get very busy, I used networkx's pagerank algorithm to get only the most central nodes from this co-occurrence network. The less connected nodes aren't as interesting for the purposes of getting summary information about a video, so there is no point in including them. This isn't a typical application of pagerank since the graph is undirected, but getting the most connected nodes is still useful for my purposes. 
 
-I wanted a visualization of words that are close together because I only provide ChatGPT with a 2000 word window of the video transcript, so relationships between named entities that are within 7 words of one another will likely fall within the same chunk and be answerable.
+I wanted a visualization of words that are close together because I only provide ChatGPT with a 2000 word window of the video transcript, so questions about named entities that are within 7 words of one another will likely fall within the same chunk and be answerable.
 
 A json of a sample network is stored in `./co_occurrence.json`. A pyvis visualization of the network is stored in `./co_occurrence_graph.html`.
 
