@@ -18,9 +18,9 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - name: Install Python dependencies
         run: |
-          pipenv install --skip-lock
+          pipenv install
           pipenv lock --pre
-          pipenv install --system --deploy
+          pipenv install --dev
       - name: Install Node dependencies
         run: npm install
       - run: cp .env.example .env
