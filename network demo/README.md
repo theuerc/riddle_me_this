@@ -10,7 +10,7 @@ I wanted a visualization of words that are close together because I only provide
 
 A json of a sample network is stored in `./co_occurrence.json`. A pyvis visualization of the network is stored in `./co_occurrence_graph.html`.
 
-I wont discuss the other clustering network I made because I didn't use it in the final project.
+I wont discuss the other clustering network I made because I didn't use it in the final flask app.
 
 Rendered Co-occurrence html file screenshot:
 
